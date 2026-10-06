@@ -1,0 +1,67 @@
+plugins {
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'application'
+}
+
+group = 'local.crystal'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(22)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+def crystalLibDir = file('lib_local')
+
+dependencies {
+    implementation fileTree(dir: crystalLibDir, include: '*.jar')
+
+    implementation('org.springframework.boot:spring-boot-starter') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.register('integrationTest', Test) {
+    group = 'verification'
+    description = 'Abre y exporta todos los RPT de Crystal-Reports-master.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    shouldRunAfter test
+}
+
+application {
+    mainClass = 'local.crystal.CrystalReportApplication'
+}
+
+tasks.register('runReport', JavaExec) {
+    group = 'application'
+    description = 'Abre un RPT y lo exporta a PDF usando el runtime JRC local.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = application.mainClass
+    def reportArgument = project.findProperty('rpt') ?: '../assets/CR4EMIP32_0-80004572/eclipse/plugins/com.businessobjects.crystalreports.samples_12.2.233.r5802/SampleReports/Statement of Account.rpt'
+    def pdfArgument = project.findProperty('pdf') ?: 'build/output/reporte.pdf'
+    def parametersArgument = project.findProperty('parameters') ?: ''
+    args reportArgument, pdfArgument, parametersArgument
+}
+
+tasks.named('bootRun') {
+    systemProperty 'java.awt.headless', 'true'
+}
