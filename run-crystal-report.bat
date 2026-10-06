@@ -1,3 +1,5 @@
+rem Commit-Date: 2026-10-06T21:45:00Z
+rem Commit-Version: 0.1.0-20261006214500
 @echo off
 rem Autor: Antonio Duce
 rem Version del programa: 0.1.0; acceso abreviado al reporte de muestra.

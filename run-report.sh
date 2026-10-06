@@ -1,3 +1,5 @@
+# Commit-Date: 2026-10-06T21:45:00Z
+# Commit-Version: 0.1.0-20261006214500
 #!/usr/bin/env bash
 # Autor: Antonio Duce
 # Version del programa: 0.1.0; la revision Git se incorpora al JAR.

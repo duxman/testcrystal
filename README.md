@@ -1,10 +1,27 @@
+> Commit-Date: 2026-10-06T21:45:00Z
+> Commit-Version: 0.1.0-20261006214500
 # Prueba Crystal Reports con Java 22
 
 > Autor: Antonio Duce | Version base del programa: 0.1.0
 
-La version final de cada artefacto se calcula automaticamente como la version
-base mas la revision corta de Git, por ejemplo `0.1.0-fc727d4`. El manifiesto
-del JAR contiene esa version y puede consultarse con `gradle gitVersion`.
+La version final de cada artefacto se calcula automaticamente durante el release
+y se guarda en `release.properties`, por ejemplo `0.1.0-20261006213716`. Si no
+existe ese fichero, Gradle usa la revision corta de Git como fallback. El
+manifiesto del JAR contiene la version y puede consultarse con `gradle gitVersion`.
+
+Antes de cada commit se actualizan automaticamente `Commit-Date` y
+`Commit-Version` en los ficheros propios y en `release.properties`. El hook
+compartido esta en `.githooks/pre-commit`; se activa con:
+
+```powershell
+git config core.hooksPath .githooks
+```
+
+El script [release.bat](release.bat) o [release.sh](release.sh) activa el hook,
+actualiza los metadatos, hace `git add -A`, crea el commit y ejecuta el push.
+La fecha se guarda en UTC. El hash final de Git no se escribe dentro del mismo
+commit porque cualquier cambio posterior alteraria ese hash; queda registrado
+en Git y la version reproducible del release queda en los ficheros y el JAR.
 
 Esta prueba usa Spring Boot 3 con una estructura convencional (`src/main/java` y
 configuracion externa equivalente a `application.properties`). No tiene servidor web ni interfaz

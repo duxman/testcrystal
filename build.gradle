@@ -1,5 +1,7 @@
+// Commit-Version: 0.1.0-20261006214500
+// Commit-Date: 2026-10-06T21:45:00Z
 // Autor: Antonio Duce
-// Version del programa: 0.1.0; el sufijo de compilacion se obtiene de Git.
+// Version del programa: 0.1.0; la version de release y su fecha se guardan en release.properties.
 // Este fichero define el build reproducible y conserva las dependencias JRC locales.
 
 plugins {
@@ -21,7 +23,64 @@ try {
 } catch (Exception ignored) {
     // El build sigue siendo posible en una copia sin la herramienta Git.
 }
-version = "${baseVersion}-${gitRevision}"
+def releasePropertiesFile = file('release.properties')
+def releaseProperties = new Properties()
+if (releasePropertiesFile.isFile()) {
+    releasePropertiesFile.withInputStream { releaseProperties.load(it) }
+}
+def releaseVersion = releaseProperties.getProperty('version')
+version = releaseVersion ?: "${baseVersion}-${gitRevision}"
+
+def metadataFiles = [
+        'README.md', '.gitignore', 'build.gradle', 'settings.gradle',
+        'config-example/application.properties', 'run-report.bat', 'run-report.sh',
+        'run-crystal-report.bat', 'release.bat', 'release.sh', '.githooks/pre-commit',
+        'src/main/java/local/crystal/CrystalDatabaseProperties.java',
+        'src/main/java/local/crystal/CrystalReportApplication.java',
+        'src/main/java/local/crystal/ExportCrystalReport.java',
+        'src/test/java/local/crystal/ExportCrystalReportTest.java',
+        'src/test/java/local/crystal/CrystalReportsIntegrationTest.java'
+]
+
+tasks.register('updateMetadata') {
+    group = 'versioning'
+    description = 'Actualiza fecha y version de release en los ficheros propios.'
+    def commitDate = project.findProperty('commitDate') ?: java.time.Instant.now().toString()
+    def commitVersion = project.findProperty('commitVersion') ?: "${baseVersion}-${commitDate.replaceAll('[^0-9]', '').take(14)}"
+    doLast {
+        releasePropertiesFile.text = "# Autor: Antonio Duce\n# Metadatos generados por Gradle; no editar manualmente.\nversion=${commitVersion}\ncommitDate=${commitDate}\n"
+        metadataFiles.collect { file(it) }.findAll { it.isFile() }.each { metadataFile ->
+            def commentPrefix = metadataFile.name.endsWith('.java') || metadataFile.name.endsWith('.gradle') ? '//' :
+                    (metadataFile.name.endsWith('.bat') ? 'rem' :
+                            (metadataFile.name.endsWith('.md') ? '>' : '#'))
+                def dateLine = "${commentPrefix} Commit-Date: ${commitDate}"
+                def versionLine = "${commentPrefix} Commit-Version: ${commitVersion}"
+            def lines = metadataFile.readLines('UTF-8')
+            def hasDate = false
+            def hasVersion = false
+            lines = lines.collect { line ->
+                if (line.trim().startsWith("${commentPrefix} Commit-Date:")) {
+                    hasDate = true
+                    return dateLine
+                }
+                if (line.trim().startsWith("${commentPrefix} Commit-Version:")) {
+                    hasVersion = true
+                    return versionLine
+                }
+                return line
+            }
+            def insertAt = lines && lines[0].startsWith('#!') ? 1 : 0
+            if (!hasVersion) {
+                lines.add(insertAt++, versionLine)
+            }
+            if (!hasDate) {
+                lines.add(insertAt, dateLine)
+            }
+            metadataFile.setText(lines.join(System.lineSeparator()) + System.lineSeparator(), 'UTF-8')
+        }
+        println "Metadata actualizado: ${commitVersion} (${commitDate})"
+    }
+}
 
 jar {
     manifest {
