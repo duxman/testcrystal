@@ -28,10 +28,14 @@ public class CrystalReportApplication {
     @Bean
     CommandLineRunner exportReport(ExportCrystalReport exporter) {
         return args -> {
-            if (args.length != 3) {
-                throw new IllegalArgumentException("Uso: CrystalReportApplication <entrada.rpt> <salida.pdf> [Campo=valor;Otro=valor]");
+            if (args.length < 3 || args.length > 4) {
+                throw new IllegalArgumentException("Uso: CrystalReportApplication <entrada.rpt> <salida.pdf> [Campo=valor;Otro=valor] [\\\\servidor\\impresora]");
             }
             exporter.export(args[0], args[1], args[2]);
+            if (args.length == 4 && !args[3].isBlank()) {
+                Logger.getLogger(CrystalReportApplication.class.getName()).info(
+                        () -> "Destino de impresion solicitado para el PDF conservado: " + args[3]);
+            }
         };
     }
 

@@ -1,8 +1,47 @@
 # Prueba Crystal Reports con Java 22
 
 Esta prueba usa Spring Boot 3 con una estructura convencional (`src/main/java` y
-`src/main/resources/application.properties`). No tiene servidor web ni interfaz
+configuracion externa equivalente a `application.properties`). No tiene servidor web ni interfaz
 grafica todavia: abre un RPT y genera un PDF. Lombok se usa para el logging del servicio.
+
+## Configuracion externa obligatoria
+
+La configuracion real no se empaqueta dentro del JAR. La plantilla esta en
+`config-example/application.properties` y debe copiarse a una ruta protegida del
+servidor:
+
+- Windows Server 2022: `C:\ProgramData\CrystalReportService\config\application.properties`
+- Red Hat 9: `/etc/crystal-report-service/application.properties`
+
+Los scripts buscan esas rutas por defecto. Se puede cambiar la ruta con:
+
+```text
+CRYSTAL_CONFIG_DIR=/ruta/privada/de/configuracion
+```
+
+La ubicacion se pasa como `spring.config.location`, por lo que el fichero externo
+es obligatorio y no hay un fallback de configuracion dentro del JAR. Al ejecutar
+el JAR directamente, usar por ejemplo:
+
+```powershell
+java -jar build\libs\crystal-java22-test-0.1.0.jar `
+  --spring.config.location=file:C:/ProgramData/CrystalReportService/config/ `
+  reporte.rpt salida.pdf
+```
+
+La cuenta del servicio debe poder leer el fichero, pero los usuarios normales no
+deberian tener acceso. La contraseña Oracle, wallets y otros secretos deben estar
+en esa ruta protegida o en un gestor de secretos, nunca dentro del repositorio ni
+del JAR.
+
+Para comprobar que no se ha incluido por accidente:
+
+```powershell
+& 'C:\dev\tools\gradle\bin\gradle.bat' bootJar
+jar tf build\libs\crystal-java22-test-0.1.0.jar | Select-String 'application.properties'
+```
+
+La segunda orden no debe devolver `application.properties`.
 
 ## Sobre las dependencias
 
@@ -147,6 +186,16 @@ argumento:
 run-report.bat "Crystal-Reports-master\Customer List.rpt" "build\output\customer.pdf" "Country=USA;CustomerId=12345"
 ```
 
+La impresora compartida es el cuarto argumento y se decide para cada trabajo:
+
+```bat
+run-report.bat "Crystal-Reports-master\Customer List.rpt" "build\output\customer.pdf" "Country=USA;CustomerId=12345" "\\PRINTSERVER\ALBARANES_03"
+```
+
+El destino no se guarda en la configuracion global porque puede haber cientos de
+impresoras. Actualmente se registra como destino solicitado junto al resultado;
+el adaptador que lo entregue al servidor de impresion se conectara despues.
+
 El formato inicial es `Nombre=valor;OtroNombre=valor`. El nombre debe coincidir
 exactamente con el nombre del parametro definido en Crystal. Los valores se pasan
 como texto; para fechas, numeros con formato regional o parametros multivalor
@@ -154,6 +203,15 @@ habra que añadir conversion tipada cuando conozcamos los RPT reales.
 
 El reporte debe poder resolverse sin pedir credenciales o parametros interactivos.
 Si usa una base de datos, el siguiente paso sera configurar el `DatabaseController` antes de exportar.
+
+En Windows, [run-report.bat](run-report.bat) exige que exista la configuracion
+externa y usa `C:\ProgramData\CrystalReportService\config` por defecto. En Red Hat,
+usa [run-report.sh](run-report.sh) y `/etc/crystal-report-service` por defecto:
+
+```bash
+chmod 750 run-report.sh
+./run-report.sh /ruta/Customer\ List.rpt /var/lib/crystal-report-service/output/customer.pdf 'Country=USA'
+```
 
 ## Pruebas
 
@@ -180,7 +238,7 @@ ficheros rotados de 10 MB. Se registra el reporte de entrada, el PDF de salida,
 su tamano y el stack trace completo si la exportacion falla. La carpeta `logs`
 esta excluida de Git porque contiene resultados de ejecucion.
 
-El nivel se configura en `src/main/resources/application.properties`:
+El nivel se configura en el `application.properties` externo:
 
 ```properties
 crystal.logging.level=INFO
@@ -192,6 +250,32 @@ Valores utiles: `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE` y `ALL`.
 El proyecto no incluye `spring-boot-starter-web` ni el starter de logging de Spring Boot:
 no son necesarios para este proceso de consola. Para convertirlo en una aplicacion
 web se anadira `spring-boot-starter-web` y, para monitorizacion, `spring-boot-starter-actuator`.
+
+## Impresion en servidor Windows
+
+La generacion del PDF es independiente del sistema operativo. El proceso puede
+correr en Windows Server 2022 o Red Hat 9. Las impresoras del 3PL estan en un
+servidor de impresion Windows. La impresora concreta se recibe por trabajo como
+ruta compartida UNC, por ejemplo `\\PRINTSERVER\ALBARANES_03`:
+
+```text
+RPT + Oracle -> PDF en el servidor de la aplicacion -> cola del servidor Windows
+```
+
+No se debe asumir que `java.awt.print` vera una impresora Windows desde Red Hat.
+Para esa fase habra que elegir un mecanismo autorizado por infraestructura, por
+ejemplo una cola accesible por IPP/SMB, un servicio HTTP interno o un agente
+Windows que reciba el PDF y la ruta de impresora. Se mantienen abiertas esas
+opciones. La configuracion global solo controla la politica:
+
+```properties
+crystal.print.enabled=false
+crystal.print.keep-pdf=true
+```
+
+El PDF se conserva siempre antes de intentar imprimir. No debe borrarse tras el
+envio: sera el artefacto auditable, permitira reintentar una impresion y ayudara
+a verificar fallos o diferencias entre la salida y el documento fisico.
 
 ## Conexion de base de datos
 

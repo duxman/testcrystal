@@ -4,6 +4,8 @@ setlocal
 cd /d "%~dp0"
 set "JAVA_HOME=C:\dev\tools\java\jdk22"
 set "GRADLE_HOME=C:\dev\tools\gradle"
+if "%CRYSTAL_CONFIG_DIR%"=="" set "CRYSTAL_CONFIG_DIR=%ProgramData%\CrystalReportService\config"
+set "CONFIG_FILE=%CRYSTAL_CONFIG_DIR%\application.properties"
 
 if not exist "%JAVA_HOME%\bin\java.exe" (
     echo No se encontro Java 22 en %JAVA_HOME%.
@@ -12,6 +14,12 @@ if not exist "%JAVA_HOME%\bin\java.exe" (
 
 if not exist "%GRADLE_HOME%\bin\gradle.bat" (
     echo No se encontro Gradle en %GRADLE_HOME%.
+    exit /b 1
+)
+
+if not exist "%CONFIG_FILE%" (
+    echo No se encontro la configuracion externa: %CONFIG_FILE%
+    echo Copia config-example\application.properties y protegela en esa ruta.
     exit /b 1
 )
 
@@ -28,9 +36,11 @@ if "%~1"=="" (
 )
 
 set "PARAMETERS=%~3"
+set "PRINTER=%~4"
 
 echo Reporte: %REPORT%
 echo PDF: %PDF%
 echo Parametros: %PARAMETERS%
-call "%GRADLE_HOME%\bin\gradle.bat" runReport --no-daemon "-Prpt=%REPORT%" "-Ppdf=%PDF%" "-Pparameters=%PARAMETERS%"
+echo Impresora: %PRINTER%
+call "%GRADLE_HOME%\bin\gradle.bat" runReport --no-daemon "-PconfigDir=%CRYSTAL_CONFIG_DIR%" "-Prpt=%REPORT%" "-Ppdf=%PDF%" "-Pparameters=%PARAMETERS%" "-Pprinter=%PRINTER%"
 exit /b %ERRORLEVEL%

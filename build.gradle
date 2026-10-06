@@ -59,7 +59,12 @@ tasks.register('runReport', JavaExec) {
     def reportArgument = project.findProperty('rpt') ?: '../assets/CR4EMIP32_0-80004572/eclipse/plugins/com.businessobjects.crystalreports.samples_12.2.233.r5802/SampleReports/Statement of Account.rpt'
     def pdfArgument = project.findProperty('pdf') ?: 'build/output/reporte.pdf'
     def parametersArgument = project.findProperty('parameters') ?: ''
-    args reportArgument, pdfArgument, parametersArgument
+    def printerArgument = project.findProperty('printer') ?: ''
+    def configDirectory = project.findProperty('configDir') ?: System.getenv('CRYSTAL_CONFIG_DIR')
+    if (configDirectory) {
+        systemProperty 'spring.config.location', "file:${configDirectory.replace('\\', '/')}/"
+    }
+    args reportArgument, pdfArgument, parametersArgument, printerArgument
 }
 
 tasks.named('bootRun') {
