@@ -1,4 +1,7 @@
 @echo off
+rem Autor: Antonio Duce
+rem Version del programa: 0.1.0; la revision Git se incorpora al JAR.
+rem Ejecuta un RPT y conserva el PDF; la impresora es el cuarto argumento opcional.
 setlocal
 
 cd /d "%~dp0"

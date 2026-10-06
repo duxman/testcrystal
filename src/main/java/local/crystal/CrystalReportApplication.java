@@ -17,14 +17,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+/**
+ * Punto de entrada headless para exportar un RPT y dejar un PDF persistente.
+ *
+ * <p>Autor: Antonio Duce. Version del programa: 0.1.0.</p>
+ * <p>La configuracion se carga desde fuera del JAR mediante Spring Boot. La ruta
+ * de impresora es un dato del trabajo y no una propiedad global.</p>
+ */
 @SpringBootApplication
 @EnableConfigurationProperties(CrystalDatabaseProperties.class)
 public class CrystalReportApplication {
 
+    /** Inicia Spring Boot y delega la exportacion al runner de linea de comandos. */
     public static void main(String[] args) {
         SpringApplication.run(CrystalReportApplication.class, args);
     }
 
+    /** Valida los argumentos y genera el PDF antes de registrar el destino de impresion. */
     @Bean
     CommandLineRunner exportReport(ExportCrystalReport exporter) {
         return args -> {
@@ -39,6 +48,7 @@ public class CrystalReportApplication {
         };
     }
 
+    /** Configura consola y fichero rotativo usando propiedades externas. */
     @Bean
     LoggingSetup loggingSetup(Environment environment) {
         return new LoggingSetup(
@@ -48,6 +58,7 @@ public class CrystalReportApplication {
     }
 
     static final class LoggingSetup {
+        /** Inicializa los handlers y el nivel global de java.util.logging. */
         LoggingSetup(String logDirectoryName, String logFileName, String logLevelName) {
             try {
             Level logLevel = parseLevel(logLevelName);

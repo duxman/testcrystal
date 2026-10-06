@@ -1,3 +1,6 @@
+# Autor: Antonio Duce
+# Version del programa: 0.1.0.
+# Excluye salidas de build, logs y configuracion local con secretos.
 .gradle/
 build/
 logs/

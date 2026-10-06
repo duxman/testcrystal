@@ -1,5 +1,11 @@
 # Prueba Crystal Reports con Java 22
 
+> Autor: Antonio Duce | Version base del programa: 0.1.0
+
+La version final de cada artefacto se calcula automaticamente como la version
+base mas la revision corta de Git, por ejemplo `0.1.0-fc727d4`. El manifiesto
+del JAR contiene esa version y puede consultarse con `gradle gitVersion`.
+
 Esta prueba usa Spring Boot 3 con una estructura convencional (`src/main/java` y
 configuracion externa equivalente a `application.properties`). No tiene servidor web ni interfaz
 grafica todavia: abre un RPT y genera un PDF. Lombok se usa para el logging del servicio.
@@ -38,7 +44,7 @@ Para comprobar que no se ha incluido por accidente:
 
 ```powershell
 & 'C:\dev\tools\gradle\bin\gradle.bat' bootJar
-jar tf build\libs\crystal-java22-test-0.1.0.jar | Select-String 'application.properties'
+jar tf build\libs\crystal-java22-test-*.jar | Select-String 'application.properties'
 ```
 
 La segunda orden no debe devolver `application.properties`.

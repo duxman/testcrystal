@@ -1,3 +1,7 @@
+// Autor: Antonio Duce
+// Version del programa: 0.1.0; el sufijo de compilacion se obtiene de Git.
+// Este fichero define el build reproducible y conserva las dependencias JRC locales.
+
 plugins {
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.7'
@@ -6,7 +10,35 @@ plugins {
 }
 
 group = 'local.crystal'
-version = '0.1.0'
+def baseVersion = '0.1.0'
+def gitRevision = 'unknown'
+try {
+    def process = ['git', 'rev-parse', '--short=8', 'HEAD'].execute()
+    process.waitFor()
+    if (process.exitValue() == 0) {
+        gitRevision = process.in.text.trim()
+    }
+} catch (Exception ignored) {
+    // El build sigue siendo posible en una copia sin la herramienta Git.
+}
+version = "${baseVersion}-${gitRevision}"
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': 'Crystal Report PDF Service',
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'Antonio Duce')
+    }
+}
+
+tasks.register('gitVersion') {
+    group = 'versioning'
+    description = 'Muestra la version base y la revision Git usada por el build.'
+    doLast {
+        println "${project.name} version ${project.version}"
+    }
+}
 
 java {
     toolchain {

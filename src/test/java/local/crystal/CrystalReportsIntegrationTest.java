@@ -11,9 +11,14 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Prueba de integracion que exporta los RPT de prueba a PDFs temporales de build.
+ * Autor: Antonio Duce. Version del programa: 0.1.0.
+ */
 @Tag("integration")
 class CrystalReportsIntegrationTest {
 
+    /** Verifica que todos los reportes del directorio de muestras puedan exportarse. */
     @Test
     void everyReportCanBeExported() throws Exception {
         Path reportsDirectory = Path.of("Crystal-Reports-master");

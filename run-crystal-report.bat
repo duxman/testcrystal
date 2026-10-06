@@ -1,4 +1,7 @@
 @echo off
+rem Autor: Antonio Duce
+rem Version del programa: 0.1.0; acceso abreviado al reporte de muestra.
+rem Delega la exportacion y conserva el PDF mediante run-report.bat.
 setlocal
 
 cd /d "%~dp0"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Autor: Antonio Duce
+# Version del programa: 0.1.0; la revision Git se incorpora al JAR.
+# Ejecuta un RPT y conserva el PDF; la impresora es el cuarto argumento opcional.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

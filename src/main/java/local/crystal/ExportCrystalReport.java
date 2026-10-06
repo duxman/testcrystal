@@ -15,6 +15,13 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Servicio que abre un RPT con SAP Crystal Reports JRC y conserva su exportacion PDF.
+ *
+ * <p>Autor: Antonio Duce. Version del programa: 0.1.0.</p>
+ * <p>La impresion fisica se mantiene fuera de esta clase: el PDF debe existir antes
+ * de enviarlo a una impresora dinamica del servidor Windows.</p>
+ */
 @Log
 @Service
 public class ExportCrystalReport {
@@ -30,10 +37,15 @@ public class ExportCrystalReport {
         this.databaseProperties = databaseProperties;
     }
 
+    /** Exporta un reporte sin parametros usando la ruta de salida indicada. */
     public void export(String reportFile, String pdfFile) throws Exception {
         export(reportFile, pdfFile, "");
     }
 
+    /**
+     * Abre el RPT, configura base de datos y parametros, y escribe un PDF completo.
+     * El archivo existente se reemplaza para que los reintentos sean deterministas.
+     */
     public void export(String reportFile, String pdfFile, String parameterText) throws Exception {
         Path reportPath = Path.of(reportFile).toAbsolutePath().normalize();
         Path pdfPath = Path.of(pdfFile).toAbsolutePath().normalize();
@@ -68,12 +80,18 @@ public class ExportCrystalReport {
         }
     }
 
+    /** Comprueba que la entrada existe y es un fichero antes de invocar el runtime JRC. */
     static void validateReportPath(Path reportPath) throws IOException {
         if (!Files.isRegularFile(reportPath)) {
             throw new IOException("No existe el reporte: " + reportPath);
         }
     }
 
+    /**
+     * Convierte el formato de linea de comandos Nombre=valor;Otro=valor en un mapa.
+     * El separador de igualdad solo se interpreta en su primera aparicion para
+     * permitir valores que contengan dicho caracter.
+     */
     static Map<String, String> parseParameters(String parameterText) {
         Map<String, String> parameters = new LinkedHashMap<>();
         if (parameterText == null || parameterText.isBlank()) {
@@ -98,6 +116,7 @@ public class ExportCrystalReport {
         return parameters;
     }
 
+    /** Aplica los parametros de texto al reporte principal mediante la API JRC. */
     private void configureParameters(ReportClientDocument report, Map<String, String> parameters) throws Exception {
         if (parameters.isEmpty()) {
             return;
@@ -110,6 +129,7 @@ public class ExportCrystalReport {
         }
     }
 
+    /** Inicia sesion contra la base de datos solo cuando la configuracion lo solicita. */
     private void configureDatabase(ReportClientDocument report) throws Exception {
         if (!databaseProperties.isEnabled()) {
             return;
@@ -129,6 +149,7 @@ public class ExportCrystalReport {
                 databaseProperties.getPassword());
     }
 
+    /** Rechaza una propiedad obligatoria ausente sin revelar su contenido. */
     private static void requireDatabaseValue(String name, String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Falta crystal.database." + name);
