@@ -15,6 +15,80 @@ La carpeta local se mantiene aislada para poder revisar mas adelante que JARs so
 realmente necesarios. No conviene eliminar transitivas del runtime SAP a ciegas:
 algunas se cargan de forma reflexiva durante la apertura o exportacion del reporte.
 
+## Licenciamiento y revision legal
+
+Esta prueba mezcla componentes con titulares y condiciones de uso diferentes. No
+se debe interpretar este README como una confirmacion legal de que todo el
+contenido pueda redistribuirse.
+
+Antes de hacer commit o push del proyecto completo, Legal debe revisar como minimo:
+
+1. **SAP Crystal Reports JRC**: los JAR de `lib_local` proceden del runtime de SAP.
+  Hay que confirmar si la licencia permite incluirlos en este repositorio, en un
+  instalador, en una imagen Docker y en la aplicacion productiva.
+2. **Alcance de uso**: el escenario previsto es uso interno de la empresa para
+  generar e imprimir albaranes de un operador 3PL. La aplicacion y el runtime no
+  se distribuiran a clientes ni a terceros. Aun asi, Legal debe confirmar que la
+  licencia de SAP permite este uso productivo interno y el numero de instalaciones
+  previstas. Los escenarios de redistribucion masiva, SaaS, hosting para terceros
+  o reventa no forman parte de este proyecto.
+3. **Crystal Reports Designer**: el diseñador de escritorio y el runtime Java son
+  productos/componentes diferentes. La licencia del diseñador no debe asumirse
+  como permiso automatico para redistribuir el runtime.
+4. **Archivos `.rpt`**: confirmar que podemos guardar en GitHub los reportes de
+  prueba y que no contienen datos reales, credenciales, nombres sensibles,
+  formulas propietarias o informacion de clientes.
+5. **Base de datos Oracle**: confirmar la licencia y el modo de redistribucion del
+  driver Oracle que se use en el proyecto real. El driver no esta incluido ahora.
+6. **Dependencias de terceros**: revisar los avisos incluidos en
+  `assets/CR4ERL32_0-80004572/third_party` y conservar sus textos de licencia si
+  se redistribuyen esos componentes.
+7. **Licencias del proyecto futuro**: decidir la licencia del codigo propio y si
+  es compatible con las obligaciones de SAP, Oracle y las librerias auxiliares.
+
+Hasta recibir confirmacion, la recomendacion para este escenario interno es:
+
+- Mantener `lib_local` en repositorios y servidores internos con acceso restringido.
+- No publicar reportes reales ni la base de datos `xtreme.mdb` fuera de los sistemas
+  corporativos si no se ha validado su contenido y licencia.
+- Mantener los JAR propietarios bajo control interno y documentar su procedencia.
+- No incluir contraseñas, wallets Oracle, `tnsnames.ora` ni cadenas de conexion
+  reales en Git.
+- Mantener separados el codigo fuente, los binarios SAP y los reportes de cliente.
+
+El hecho de que no exista distribucion externa reduce el alcance de la revision,
+pero no elimina la necesidad de confirmar el uso productivo interno del runtime SAP,
+el driver Oracle y los reportes utilizados para los albaranes.
+
+Si se utiliza GitHub para guardar el codigo, el repositorio debe configurarse como
+privado y con acceso solo a los equipos autorizados. Uso interno de la aplicacion
+no equivale a repositorio publico: `lib_local`, los RPT y los datos de prueba no
+deben quedar visibles por error.
+
+La carpeta `lib_local` ocupa aproximadamente 72 MB y contiene 26 JAR del runtime.
+Su presencia local permite probar, pero no demuestra que el repositorio tenga
+derecho a redistribuirlos. La aprobacion debe basarse en los acuerdos y terminos
+vigentes de SAP, no solo en que los archivos se hayan podido descargar.
+
+### Evidencias para Legal
+
+Conviene entregar a Legal:
+
+- Nombre y version exacta del paquete SAP descargado.
+- URL y cuenta/licencia con la que se obtuvo.
+- Lista de archivos que se pretenden distribuir.
+- Destino: servidores y puestos internos de la empresa.
+- Numero estimado de instalaciones, servidores, impresoras y usuarios internos.
+- Si los `.rpt` son propios, de un cliente o de terceros.
+- Que los documentos generados son albaranes operativos de un 3PL y si contienen
+  datos personales, direcciones, referencias de pedido o datos comerciales.
+- Lista de avisos de terceros y sus textos de licencia.
+- Si Oracle se conecta por JDBC, wallet, alias TNS o servicio gestionado.
+
+La nota [precio licencia.md](../doc/precio%20licencia.md) contiene una orientacion
+inicial, pero no es una licencia ni una autorizacion de redistribucion. Debe
+confirmarse contra los terminos actuales de SAP y el caso de uso concreto.
+
 ## Ejecucion sencilla
 
 Puedes arrastrar un `.rpt` sobre `run-report.bat`, o ejecutarlo desde una consola:
